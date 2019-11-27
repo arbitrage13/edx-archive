@@ -61,7 +61,22 @@ async function getPages(browser, configuration) {
   return pages;
 }
 
-async function savePage(pageData, browser, configuration) {
+async function savePage(pageData, page, configuration) {
+  if (!fs.existsSync(configuration.output)) {
+      fs.mkdirSync(configuration.output);
+  }
+
+  const filename = path.join(configuration.output, `${pageData.index + 1} - ${pageData.title}`);
+
+  if (configuration.format === "png") {
+    await page.screenshot({ path: filename + '.png', fullPage: true });
+  }
+  if (configuration.format === "pdf") {
+    await page.pdf({ path: filename + '.pdf' });
+  }
+}
+
+async function processPage(pageData, browser, configuration) {
   const page = await browser.newPage()
   await page.goto(pageData.url);
 
@@ -84,18 +99,7 @@ async function savePage(pageData, browser, configuration) {
 
   await page.waitFor(configuration.delay);
 
-  if (!fs.existsSync(configuration.output)) {
-      fs.mkdirSync(configuration.output);
-  }
-
-  const filename = path.join(configuration.output, `${pageData.index + 1} - ${pageData.title}`);
-
-  if (configuration.format === "png") {
-    await page.screenshot({ path: filename + '.png', fullPage: true });
-  }
-  if (configuration.format === "pdf") {
-    await page.pdf({ path: filename + '.pdf' });
-  }
+  await savePage(pageData, page, configuration);
 
   await page.close();
 }
@@ -112,8 +116,8 @@ async function main() {
 
   const pages = await getPages(browser, configuration);
 
-  for (const pageData of pages.slice(50,51)) {
-    await savePage(pageData, browser, configuration);
+  for (const pageData of pages.slice(50,51)) { // TODO
+    await processPage(pageData, browser, configuration);
   }
 
   await browser.close();
