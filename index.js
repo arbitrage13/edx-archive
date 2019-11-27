@@ -109,7 +109,6 @@ function prettifyPage() {
   $(".bookmark-button-wrapper").hide();
   $(".subtitles").hide();
   $(".video-wrapper").hide();
-  $("#MathJax_Message").hide();
 }
 
 async function processPage(pageData, browser, configuration) {
@@ -126,7 +125,7 @@ async function processPage(pageData, browser, configuration) {
 
   await page.evaluate(prettifyPage);
 
-  await page.waitFor(configuration.delay);
+  await page.waitFor(configuration.delay * 1000);
 
   await savePage(pageData, page, configuration);
 
