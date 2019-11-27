@@ -47,7 +47,10 @@ async function loginBrowser(browser, configuration) {
     page.click('.login-button'),
   ]);
   await page.close();
-  return response;
+
+  if (configuration.debug) {
+    console.log(`Logged in. Response status: ${response.status()}`);
+  }
 }
 
 async function getPages(browser, configuration) {
@@ -61,6 +64,12 @@ async function getPages(browser, configuration) {
   });
 
   await page.close();
+
+  if (configuration.debug) {
+    console.log("Fetched pages:");
+    console.log(pages);
+  }
+  
   return pages;
 }
 
@@ -118,10 +127,7 @@ async function main() {
 
     // log in browser
     const browser = await puppeteer.launch();
-    const loginResponse = await loginBrowser(browser, configuration);
-    if (configuration.debug) {
-      console.log(`Logged in. Response status: ${loginResponse.status()}`);
-    }
+    await loginBrowser(browser, configuration);
 
     // build list of pages that should be saved
     const pages = await retry(async () => {
@@ -130,13 +136,9 @@ async function main() {
       retries: configuration.retries,
       onRetry: () => { console.log("Failed to fetch pages. Retrying."); }
     });
-    if (configuration.debug) {
-      console.log("Fetched pages:");
-      console.log(pages);
-    }
 
     // process pages
-    for (const pageData of pages.slice(50,51)) { // TODO
+    for (const pageData of pages) { // TODO
       console.log(`Processing page: ${pageData.url}.`);
       await retry(async () => {
         return await processPage(pageData, browser, configuration);
