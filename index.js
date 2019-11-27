@@ -1,3 +1,5 @@
+const path = require('path');
+const fs = require('fs');
 const puppeteer = require('puppeteer');
 const prompt = require('async-prompt');
 const program = require('commander');
@@ -16,6 +18,7 @@ async function getConfiguration() {
     .arguments('<course_url>')
     .requiredOption('-u, --user <email>', 'edx login (email)')
     .requiredOption('-p, --password <password>', 'edx password')
+    .option('-o, --output <directory>', 'output directory', 'Archive')
     .option('-f, --format <format>', 'pdf or png', parseFormat, 'pdf')
     .option('--delay <seconds>', 'delay before saving page', 5)
     .option('-d, --debug', 'output extra debugging', false)
@@ -79,9 +82,14 @@ async function savePage(pageData, browser, configuration) {
     $("#frontend-component-cookie-policy-banner").hide();
   });
 
-  await page.waitFor(configuration.delay)
+  await page.waitFor(configuration.delay);
 
-  const filename = `${pageData.index + 1} - ${pageData.title}`;
+  if (!fs.existsSync(configuration.output)) {
+      fs.mkdirSync(configuration.output);
+  }
+
+  const filename = path.join(configuration.output, `${pageData.index + 1} - ${pageData.title}`);
+
   if (configuration.format === "png") {
     await page.screenshot({ path: filename + '.png', fullPage: true });
   }
