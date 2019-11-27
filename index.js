@@ -15,14 +15,15 @@ function parseFormat(value, previous) {
 }
 
 async function getConfiguration() {
+  function parseInteger(v) { return parseInt(v); }
   program
     .arguments('<course_url>')
     .requiredOption('-u, --user <email>', 'edx login (email)')
     .requiredOption('-p, --password <password>', 'edx password')
     .option('-o, --output <directory>', 'output directory', 'Archive')
     .option('-f, --format <format>', 'pdf or png', parseFormat, 'pdf')
-    .option('-r, --retries <retries>', 'number of attempts in case of failure', (v) => { return parseInt(v); }, 2)
-    .option('--delay <seconds>', 'delay before saving page', 5)
+    .option('-r, --retries <retries>', 'number of attempts in case of failure', parseInteger, 2)
+    .option('--delay <seconds>', 'delay before saving page', parseInteger, 5)
     .option('-d, --debug', 'output extra debugging', false)
     .parse(process.argv);
 
@@ -74,11 +75,15 @@ async function getPages(browser, configuration) {
 }
 
 async function savePage(pageData, page, configuration) {
+  const filename = path.join(configuration.output, `${pageData.index + 1} - ${pageData.title}`);
+
+  if (configuration.debug) {
+    console.log(`Saving page: ${pageData.url} as: ${filename}`);
+  }
+
   if (!fs.existsSync(configuration.output)) {
       fs.mkdirSync(configuration.output);
   }
-
-  const filename = path.join(configuration.output, `${pageData.index + 1} - ${pageData.title}`);
 
   if (configuration.format === "png") {
     await page.screenshot({ path: filename + '.png', fullPage: true });
@@ -86,6 +91,25 @@ async function savePage(pageData, page, configuration) {
   if (configuration.format === "pdf") {
     await page.pdf({ path: filename + '.pdf' });
   }
+}
+
+function prettifyPage() {
+  $(".show").trigger("click");
+  $(".hideshowbottom").trigger("click");
+  $(".discussion-show.shown").trigger("click");
+  $(".discussion-module").hide();
+  $("header").hide();
+  $("#footer-edx-v3").hide();
+  $(".course-tabs").hide();
+  $(".course-expiration-message").hide();
+  $("#frontend-component-cookie-policy-banner").hide();
+  $(".sequence-bottom").hide();
+  $(".sequence-nav").hide();
+  $(".course-license").hide();
+  $(".bookmark-button-wrapper").hide();
+  $(".subtitles").hide();
+  $(".video-wrapper").hide();
+  $("#MathJax_Message").hide();
 }
 
 async function processPage(pageData, browser, configuration) {
@@ -100,14 +124,7 @@ async function processPage(pageData, browser, configuration) {
       .replace(/^(Course\s)/, "");
   });
 
-  await page.evaluate(() => {
-    $(".show").trigger("click");
-    $(".hideshowbottom").trigger("click");
-    $(".discussion-show.shown").trigger("click");
-    $("#footer-edx-v3").hide();
-    $(".course-expiration-message").hide();
-    $("#frontend-component-cookie-policy-banner").hide();
-  });
+  await page.evaluate(prettifyPage);
 
   await page.waitFor(configuration.delay);
 
