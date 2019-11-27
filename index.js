@@ -3,11 +3,20 @@ const prompt = require('async-prompt');
 const program = require('commander');
 
 
+function parseFormat(value, previous) {
+  if (!["pdf", "png"].includes(value)) {
+    console.log(`invalid format: ${value}`);
+    process.exit(1);
+  }
+  return value;
+}
+
 async function getConfiguration() {
   program
     .arguments('<course_url>')
     .requiredOption('-u, --user <email>', 'edx login (email)')
     .requiredOption('-p, --password <password>', 'edx password')
+    .option('-f, --format <format>', 'pdf or png', parseFormat, 'pdf')
     .option('--delay <seconds>', 'delay before saving page', 5)
     .option('-d, --debug', 'output extra debugging', false)
     .parse(process.argv);
@@ -73,8 +82,12 @@ async function savePage(pageData, browser, configuration) {
   await page.waitFor(configuration.delay)
 
   const filename = `${pageData.index + 1} - ${pageData.title}`;
-  await page.screenshot({ path: filename + '.png', fullPage: true });
-  await page.pdf({ path: filename + '.pdf' });
+  if (configuration.format === "png") {
+    await page.screenshot({ path: filename + '.png', fullPage: true });
+  }
+  if (configuration.format === "pdf") {
+    await page.pdf({ path: filename + '.pdf' });
+  }
 
   await page.close();
 }
