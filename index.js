@@ -32,7 +32,7 @@ async function loginBrowser(browser, configuration) {
     page.waitForNavigation({ waitUntil: 'networkidle0' }),
     page.click('.login-button'),
   ]);
-  page.close();
+  await page.close();
 }
 
 async function getPages(browser, configuration) {
@@ -40,26 +40,25 @@ async function getPages(browser, configuration) {
   await page.goto(configuration.courseUrl);
 
   const pages = await page.evaluate(() => {
-    const links = [];
-    const elements = document.getElementsByClassName('outline-item');
-    for (const element of elements) {
-        if (element.href !== undefined) {
-          links.push(element.href);
-        }
-    }
-    return links;
+    return $("a.outline-item").map(function(i, e) {
+      return { "index": i, "url": e.href };
+    }).toArray();
   });
 
-  page.close();
+  await page.close();
   return pages;
 }
 
-async function savePage(pageUrl, browser, configuration) {
+async function savePage(pageData, browser, configuration) {
   const page = await browser.newPage()
-  await page.goto(pageUrl);
+  await page.goto(pageData.url);
 
-  breadcrumbs = await page.evaluate(() => {
-    return document.getElementsByClassName("breadcrumbs")[0].textContent.replace(/(\r\n|\n|\r|\:)/gm, "").replace(/\s+/g,' ').trim();
+  pageData.title = await page.evaluate(() => {
+    return $(".breadcrumbs").first().text()
+      .replace(/(\r\n|\n|\r|\:)/gm, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/^(Course\s)/, "");
   });
 
   await page.evaluate(() => {
@@ -72,10 +71,12 @@ async function savePage(pageUrl, browser, configuration) {
   });
 
   await page.waitFor(configuration.delay)
-  await page.screenshot({ path: breadcrumbs + '.png', fullPage: true });
-  await page.pdf({ path: breadcrumbs + '.pdf' });
 
-  page.close();
+  const filename = `${pageData.index + 1} - ${pageData.title}`;
+  await page.screenshot({ path: filename + '.png', fullPage: true });
+  await page.pdf({ path: filename + '.pdf' });
+
+  await page.close();
 }
 
 async function main() {
@@ -90,8 +91,8 @@ async function main() {
 
   const pages = await getPages(browser, configuration);
 
-  for (const pageUrl of pages.slice(50,51)) {
-    await savePage(pageUrl, browser, configuration);
+  for (const pageData of pages.slice(50,51)) {
+    await savePage(pageData, browser, configuration);
   }
 
   await browser.close();
