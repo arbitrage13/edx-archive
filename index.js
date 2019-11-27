@@ -3,6 +3,7 @@ const fs = require('fs');
 const puppeteer = require('puppeteer');
 const prompt = require('async-prompt');
 const program = require('commander');
+const retry = require('async-retry')
 
 
 function parseFormat(value, previous) {
@@ -20,6 +21,7 @@ async function getConfiguration() {
     .requiredOption('-p, --password <password>', 'edx password')
     .option('-o, --output <directory>', 'output directory', 'Archive')
     .option('-f, --format <format>', 'pdf or png', parseFormat, 'pdf')
+    .option('-r, --retries <retries>', 'number of attempts in case of failure', (v) => { return parseInt(v); }, 2)
     .option('--delay <seconds>', 'delay before saving page', 5)
     .option('-d, --debug', 'output extra debugging', false)
     .parse(process.argv);
@@ -40,11 +42,12 @@ async function loginBrowser(browser, configuration) {
   await page.goto('https://courses.edx.org/login');
   await page.type('#login-email', configuration.user);
   await page.type('#login-password', configuration.password);
-  await Promise.all([
+  const [response] = await Promise.all([
     page.waitForNavigation({ waitUntil: 'networkidle0' }),
     page.click('.login-button'),
   ]);
   await page.close();
+  return response;
 }
 
 async function getPages(browser, configuration) {
@@ -105,22 +108,51 @@ async function processPage(pageData, browser, configuration) {
 }
 
 async function main() {
-  const configuration = await getConfiguration();
-  if (configuration.debug) {
-    console.log("Configuration:");
-    console.log(configuration);
+  try {
+    // build configuration
+    const configuration = await getConfiguration();
+    if (configuration.debug) {
+      console.log("Configuration:");
+      console.log(configuration);
+    }
+
+    // log in browser
+    const browser = await puppeteer.launch();
+    const loginResponse = await loginBrowser(browser, configuration);
+    if (configuration.debug) {
+      console.log(`Logged in. Response status: ${loginResponse.status()}`);
+    }
+
+    // build list of pages that should be saved
+    const pages = await retry(async () => {
+      return await getPages(browser, configuration);
+    }, {
+      retries: configuration.retries,
+      onRetry: () => { console.log("Failed to fetch pages. Retrying."); }
+    });
+    if (configuration.debug) {
+      console.log("Fetched pages:");
+      console.log(pages);
+    }
+
+    // process pages
+    for (const pageData of pages.slice(50,51)) { // TODO
+      console.log(`Processing page: ${pageData.url}.`);
+      await retry(async () => {
+        return await processPage(pageData, browser, configuration);
+      }, {
+        retries: configuration.retries,
+        onRetry: () => { console.log(`Failed to process page: ${pageData.url}. Retrying.`); }
+      });
+    }
+
+    //
+    console.log("Done.");
+    await browser.close();
+  } catch (e) {
+    console.error(e);
+    process.exit(1);
   }
-
-  const browser = await puppeteer.launch();
-  await loginBrowser(browser, configuration);
-
-  const pages = await getPages(browser, configuration);
-
-  for (const pageData of pages.slice(50,51)) { // TODO
-    await processPage(pageData, browser, configuration);
-  }
-
-  await browser.close();
 }
 
 
