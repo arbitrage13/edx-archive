@@ -69,7 +69,7 @@ async function getPages(browser, configuration) {
     console.log("Fetched pages:");
     console.log(pages);
   }
-  
+
   return pages;
 }
 
@@ -94,7 +94,7 @@ async function processPage(pageData, browser, configuration) {
 
   pageData.title = await page.evaluate(() => {
     return $(".breadcrumbs").first().text()
-      .replace(/(\r\n|\n|\r|\:)/gm, "")
+      .replace(/(\r\n|\n|\r|\:|\?)/gm, "")
       .replace(/\s+/g, " ")
       .trim()
       .replace(/^(Course\s)/, "");
