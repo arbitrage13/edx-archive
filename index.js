@@ -25,8 +25,8 @@ async function getConfiguration() {
     .option('-o, --output <directory>', 'output directory', 'Archive')
     .option('-f, --format <format>', 'pdf or png', parseFormat, 'pdf')
     .option('-r, --retries <retries>', 'number of attempts in case of failure', parseInteger, 3)
-    .option('-d, --delay <seconds>', 'delay before saving page', parseInteger, 3)
-    .option('-c, --concurrency <number>', 'number of pages to save in parallel', parseInteger, 6)
+    .option('-d, --delay <seconds>', 'delay before saving page', parseInteger, 1)
+    .option('-c, --concurrency <number>', 'number of pages to save in parallel', parseInteger, 4)
     .option('--debug', 'output extra debugging', false)
     .parse(process.argv);
 
