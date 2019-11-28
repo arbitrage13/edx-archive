@@ -25,7 +25,7 @@ async function getConfiguration() {
     .option('-o, --output <directory>', 'output directory', 'Archive')
     .option('-f, --format <format>', 'pdf or png', parseFormat, 'pdf')
     .option('-r, --retries <retries>', 'number of attempts in case of failure', parseInteger, 3)
-    .option('-d, --delay <seconds>', 'delay before saving page', parseInteger, 10)
+    .option('-d, --delay <seconds>', 'delay before saving page', parseInteger, 3)
     .option('-c, --concurrency <number>', 'number of pages to save in parallel', parseInteger, 6)
     .option('--debug', 'output extra debugging', false)
     .parse(process.argv);
@@ -125,6 +125,18 @@ function buildTitle(breadcumbs) {
     .replace(/^(Course\s)/, "");
 }
 
+function waitForMathJax() {
+  return new Promise(function(resolve, reject) {
+    try {
+      // TODO this might be unreliable. Try to find a better way to detect
+      // whether math has been processed
+      MathJax.Hub.Queue(() => { resolve(); });
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
 async function processPage(pageData, browser, configuration) {
   const page = await openPage(pageData.url, browser, configuration);
 
@@ -133,6 +145,8 @@ async function processPage(pageData, browser, configuration) {
   }));
 
   await page.evaluate(prettifyPage);
+
+  await page.evaluate(waitForMathJax)
 
   await page.waitFor(configuration.delay * 1000);
 
