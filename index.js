@@ -4,7 +4,8 @@ const sanitize = require("sanitize-filename");
 const puppeteer = require('puppeteer');
 const prompt = require('async-prompt');
 const program = require('commander');
-const retry = require('async-retry')
+const retry = require('async-retry');
+const PromisePool = require('es6-promise-pool');
 
 
 function parseFormat(value, previous) {
@@ -23,9 +24,10 @@ async function getConfiguration() {
     .requiredOption('-p, --password <password>', 'edx password')
     .option('-o, --output <directory>', 'output directory', 'Archive')
     .option('-f, --format <format>', 'pdf or png', parseFormat, 'pdf')
-    .option('-r, --retries <retries>', 'number of attempts in case of failure', parseInteger, 2)
-    .option('--delay <seconds>', 'delay before saving page', parseInteger, 5)
-    .option('-d, --debug', 'output extra debugging', false)
+    .option('-r, --retries <retries>', 'number of attempts in case of failure', parseInteger, 3)
+    .option('-d, --delay <seconds>', 'delay before saving page', parseInteger, 10)
+    .option('-c, --concurrency <number>', 'number of pages to save in parallel', parseInteger, 6)
+    .option('--debug', 'output extra debugging', false)
     .parse(process.argv);
 
   if (program.args.length !== 1) {
@@ -126,7 +128,7 @@ function buildTitle(breadcumbs) {
 async function processPage(pageData, browser, configuration) {
   const page = await openPage(pageData.url, browser, configuration);
 
-  const breadcumbs = buildTitle(await page.evaluate(() => {
+  pageData.title = buildTitle(await page.evaluate(() => {
     return $(".breadcrumbs").first().text();
   }));
 
@@ -161,15 +163,19 @@ async function main() {
     });
 
     // process pages
-    for (const pageData of pages) { // TODO
-      console.log(`Processing page: ${pageData.url}.`);
-      await retry(async () => {
-        return await processPage(pageData, browser, configuration);
-      }, {
-        retries: configuration.retries,
-        onRetry: () => { console.log(`Failed to process page: ${pageData.url}. Retrying.`); }
-      });
+    const jobGenerator = function * () {
+      for (const pageData of pages) {
+        console.log(`Processing page: ${pageData.url}.`);
+        yield retry(async () => {
+          return await processPage(pageData, browser, configuration);
+        }, {
+          retries: configuration.retries,
+          onRetry: () => { console.log(`Failed to process page: ${pageData.url}. Retrying.`); }
+        });
+      }
     }
+    const pool = new PromisePool(jobGenerator, configuration.concurrency);
+    await pool.start();
 
     //
     console.log("Done.");

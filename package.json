@@ -12,6 +12,7 @@
     "async-prompt": "^1.0.1",
     "async-retry": "^1.2.3",
     "commander": "^4.0.1",
+    "es6-promise-pool": "^2.5.0",
     "puppeteer": "^2.0.0",
     "sanitize-filename": "^1.6.3"
   }
