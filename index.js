@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const sanitize = require("sanitize-filename");
 const puppeteer = require('puppeteer');
 const prompt = require('async-prompt');
 const program = require('commander');
@@ -38,9 +39,14 @@ async function getConfiguration() {
   return configuration;
 }
 
-async function loginBrowser(browser, configuration) {
+async function openPage(url, browser, configuration) {
   const page = await browser.newPage();
-  await page.goto('https://courses.edx.org/login');
+  await page.goto(url);
+  return page;
+}
+
+async function loginBrowser(browser, configuration) {
+  const page = await openPage('https://courses.edx.org/login', browser, configuration);
   await page.type('#login-email', configuration.user);
   await page.type('#login-password', configuration.password);
   const [response] = await Promise.all([
@@ -55,8 +61,7 @@ async function loginBrowser(browser, configuration) {
 }
 
 async function getPages(browser, configuration) {
-  const page = await browser.newPage()
-  await page.goto(configuration.courseUrl);
+  const page = await openPage(configuration.courseUrl, browser, configuration);
 
   const pages = await page.evaluate(() => {
     return $("a.outline-item").map(function(i, e) {
@@ -111,17 +116,19 @@ function prettifyPage() {
   $(".video-wrapper").hide();
 }
 
-async function processPage(pageData, browser, configuration) {
-  const page = await browser.newPage()
-  await page.goto(pageData.url);
+function buildTitle(breadcumbs) {
+  return sanitize(breadcumbs)
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^(Course\s)/, "");
+}
 
-  pageData.title = await page.evaluate(() => {
-    return $(".breadcrumbs").first().text()
-      .replace(/(\r\n|\n|\r|\:|\?)/gm, "")
-      .replace(/\s+/g, " ")
-      .trim()
-      .replace(/^(Course\s)/, "");
-  });
+async function processPage(pageData, browser, configuration) {
+  const page = await openPage(pageData.url, browser, configuration);
+
+  const breadcumbs = buildTitle(await page.evaluate(() => {
+    return $(".breadcrumbs").first().text();
+  }));
 
   await page.evaluate(prettifyPage);
 
