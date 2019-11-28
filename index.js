@@ -112,6 +112,7 @@ function prettifyPage() {
   $("#frontend-component-cookie-policy-banner").hide();
   $(".sequence-bottom").hide();
   $(".sequence-nav").hide();
+  $(".nav-utilities").hide();
   $(".course-license").hide();
   $(".bookmark-button-wrapper").hide();
   $(".subtitles").hide();
