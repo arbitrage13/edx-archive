@@ -21,12 +21,13 @@ function parseFormat(value, previous) {
 async function getConfiguration() {
   function parseInteger(v) { return parseInt(v); }
   program
+    .name("edx-archive")
     .arguments('<course_url>')
     .requiredOption('-u, --user <email>', 'edx login (email)')
     .requiredOption('-p, --password <password>', 'edx password')
     .option('-o, --output <directory>', 'output directory', 'Archive')
-    .option('-f, --format <format>', 'pdf or png', parseFormat, 'pdf')
-    .option('-r, --retries <retries>', 'number of attempts in case of failure', parseInteger, 3)
+    .option('-f, --format <format>', 'save pages as pdf or png', parseFormat, 'pdf')
+    .option('-r, --retries <retries>', 'number of retry attempts in case of failure', parseInteger, 3)
     .option('-d, --delay <seconds>', 'delay before saving page', parseInteger, 1)
     .option('-c, --concurrency <number>', 'number of pages to save in parallel', parseInteger, 4)
     .option('--debug', 'output extra debugging', false)
