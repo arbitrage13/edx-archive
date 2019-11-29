@@ -55,13 +55,17 @@ async function loginBrowser(browser, configuration) {
   await page.type('#login-email', configuration.user);
   await page.type('#login-password', configuration.password);
   const [response] = await Promise.all([
-    page.waitForNavigation({ waitUntil: 'networkidle0' }),
-    page.click('.login-button'),
+    page.waitForResponse(r => r.url() === "https://courses.edx.org/user_api/v1/account/login_session/"),
+    page.click('.login-button')
   ]);
-  await page.close();
 
   if (configuration.debug) {
-    console.log(`Logged in. Response status: ${response.status()}`);
+    console.log(`Login response status code: ${response.status()}`);
+  }
+
+  if (response.status() !== 200) {
+    console.log("Login failed.");
+    process.exit(1);
   }
 }
 
@@ -166,7 +170,7 @@ async function main() {
     const configuration = await getConfiguration();
     if (configuration.debug) {
       console.log("Configuration:");
-      console.log(configuration);
+      console.log(Object.assign(Object.assign({}, configuration), { user: "<censored>", password: "<censored>" }));
     }
 
     // log in browser
