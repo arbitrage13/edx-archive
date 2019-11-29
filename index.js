@@ -23,8 +23,8 @@ async function getConfiguration() {
   program
     .name("edx-archive")
     .arguments('<course_url>')
-    .requiredOption('-u, --user <email>', 'edx login (email)')
-    .requiredOption('-p, --password <password>', 'edx password')
+    .option('-u, --user <email>', 'edx login (email)')
+    .option('-p, --password <password>', 'edx password')
     .option('-o, --output <directory>', 'output directory', 'Archive')
     .option('-f, --format <format>', 'save pages as pdf or png', parseFormat, 'pdf')
     .option('-r, --retries <retries>', 'number of retry attempts in case of failure', parseInteger, 3)
@@ -40,6 +40,14 @@ async function getConfiguration() {
   const configuration = Object.assign({}, program.opts());
 
   configuration.courseUrl = program.args[0];
+
+  if (!configuration.user) {
+    configuration.user = await prompt('User: ');
+  }
+
+  if (!configuration.password) {
+    configuration.password = await prompt('Password: ');
+  }
 
   return configuration;
 }
