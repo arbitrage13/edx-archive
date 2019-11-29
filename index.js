@@ -123,10 +123,11 @@ function prettifyPage() {
 }
 
 function buildTitle(breadcumbs) {
-  return sanitize(breadcumbs)
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/^(Course\s)/, "");
+  return breadcumbs.split(/\n/).map((part) => {
+    return sanitize(part.trim())
+      .replace(/\s+/g, " ")
+      .replace(/^(Course)$/, "");
+  }).filter((Boolean)).join(" - ");
 }
 
 function waitForMathJax() {
