@@ -12,7 +12,7 @@ The following will download edX demo course pages in `png` format:
 edx-archive -u your@email.com -p edx_password --format png "https://courses.edx.org/courses/edX/DemoX/Demo_Course/course/"
 ```
 
-Downloaded pages will be simplified and include answers and exercise explanations:
+Downloaded pages will be simplified and include exercise answers and explanations:
 
 ![example](example.png)
 
