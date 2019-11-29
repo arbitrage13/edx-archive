@@ -20,7 +20,7 @@ Downloaded pages will be simplified and include answers and exercise explanation
 ## Full list of options
 
 ```
-Usage: edx-archive [options] <course_umarkrl>
+Usage: edx-archive [options] <course_url>
 
 Options:
   -u, --user <email>          edx login (email)
