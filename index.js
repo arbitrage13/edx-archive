@@ -124,6 +124,7 @@ function prettifyPage() {
   $("#footer-edx-v3").hide();
   $(".course-tabs").hide();
   $(".course-expiration-message").hide();
+  $(".verification-sock").hide();
   $("#frontend-component-cookie-policy-banner").hide();
   $(".sequence-bottom").hide();
   $(".sequence-nav").hide();
