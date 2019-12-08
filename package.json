@@ -1,6 +1,6 @@
 {
   "name": "edx-archive",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Simple tool to download edX course pages (including excercises with answers, course materials, errata, etc).",
   "keywords": [
     "edx",
