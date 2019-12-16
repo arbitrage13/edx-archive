@@ -1,3 +1,10 @@
+`edx-archive` allows you to download edX course pages. It allows you to save:
+* lecture excercises\homework\exams (including answers)
+* errata
+* extra materials that appear on course pages (including collapsable text\tables)
+
+Note: if you also want to download video and resources you can use [edx-dl](https://github.com/coursera-dl/edx-dl).
+
 ## Installation
 
 ```
