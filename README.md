@@ -1,3 +1,5 @@
+![npm](https://img.shields.io/npm/v/edx-archive)
+
 `edx-archive` allows you to download edX course pages. It allows you to save:
 * lecture excercises\homework\exams (including answers)
 * errata
