@@ -62,8 +62,12 @@ async function loginBrowser(browser, configuration) {
   const page = await openPage('https://courses.edx.org/login', browser, configuration);
   await page.type('#login-email', configuration.user);
   await page.type('#login-password', configuration.password);
+  const loginEndpoints = [
+    "https://courses.edx.org/user_api/v1/account/login_session/",
+    "https://courses.edx.org/login_ajax"
+  ];
   const [response] = await Promise.all([
-    page.waitForResponse(r => r.url() === "https://courses.edx.org/user_api/v1/account/login_session/"),
+    page.waitForResponse(r => loginEndpoints.includes(r.url())),
     page.click('.login-button')
   ]);
 
