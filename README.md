@@ -9,6 +9,10 @@ Note: if you also want to download video and resources you can use [edx-dl](http
 
 ## Installation
 
+You will need Node.js to install and run `edx-archive`. You can get it from [here](https://nodejs.org/en/download/).
+
+Once you have Node.js on your system:
+
 ```
 npm install edx-archive -g
 ```
