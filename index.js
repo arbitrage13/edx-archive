@@ -214,8 +214,10 @@ async function main() {
     await pool.start();
 
     //
-    console.log("Done.");
     await browser.close();
+    console.log(`\nSaved ${pages.length} pages to: ${path.resolve(configuration.output)}`);
+    console.log("Done.");
+
   } catch (e) {
     console.error(e);
     process.exit(1);
