@@ -19,7 +19,9 @@ function parseFormat(value, previous) {
 }
 
 async function getConfiguration() {
+  const courseUrlPattern = /^https:\/\/courses.edx.org\/courses\/.*\/course\/$/
   function parseInteger(v) { return parseInt(v); }
+
   program
     .name("edx-archive")
     .arguments('<course_url>')
@@ -35,6 +37,11 @@ async function getConfiguration() {
 
   if (program.args.length !== 1) {
     program.help();
+  }
+
+  if (!program.args[0].match(courseUrlPattern)) {
+    console.log("Invalid course url.\nCourse url should look like: https://courses.edx.org/<course_id>/course/");
+    process.exit(1);
   }
 
   const configuration = Object.assign({}, program.opts());
