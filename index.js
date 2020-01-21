@@ -53,7 +53,7 @@ async function getConfiguration() {
   }
 
   if (!configuration.password) {
-    configuration.password = await prompt('Password: ');
+    configuration.password = await prompt.password('Password: ');
   }
 
   return configuration;
